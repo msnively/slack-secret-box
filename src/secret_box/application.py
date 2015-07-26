@@ -2,10 +2,10 @@ from flask import Flask
 from database import db_session
 from models import User, Channel, Message, Retrospective
 
-app = Flask(__name__)
+application = Flask(__name__)
 
 
-@app.teardown_appcontext
+@application.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
 
@@ -14,8 +14,8 @@ STATUS_TEMPLATE = """<p>Current users: %(user_count)s</p>
 <p>Current messages: %(message_count)s</p>"""
 
 
-@app.route("/", methods=['GET'])
-def root(request):
+@application.route("/", methods=['GET'])
+def root_get():
     data = {
         "user_count": User.query.count(),
         "channel_count": Channel.query.count(),
@@ -24,12 +24,12 @@ def root(request):
     return STATUS_TEMPLATE % data
 
 
-@app.route("/", methods=['POST'])
-def post_root(request):
+@application.route("/", methods=['POST'])
+def root_post():
     json = request.get("json")
     if json is None:
         return "No data in request!"
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    application.run(host='0.0.0.0')
