@@ -14,7 +14,7 @@ class User(Base):
     slack_id = Column(String)
     messages = relationship("Message", backref="user")
 
-    def __init__(self, name=None, slack_id=None):
+    def __init__(self, name, slack_id):
         self.name = name
         self.slack_id = slack_id
 
@@ -32,8 +32,9 @@ class Channel(Base):
     name = Column(String)
     slack_id = Column(String)
     messages = relationship("Message", backref="channel")
+    retrospective = relationship("Retrospective", backref="channel")
 
-    def __init__(self, name=None, slack_id=None):
+    def __init__(self, name, slack_id):
         self.name = name
         self.slack_id = slack_id
 
@@ -50,13 +51,13 @@ class Message(Base):
     id = Column(Integer, primary_key=True)
     created_at = Column(ArrowType)
     text = Column(String)
-    user_id = Column(Integer, ForeignKey('users.id'))
     channel_id = Column(Integer, ForeignKey('channels.id'))
+    user_id = Column(Integer, ForeignKey('users.id'))
 
-    def __init__(self, text=None, user_id=None, channel_id=None):
+    def __init__(self, text, channel_id, user_id=None):
         self.text = name
-        self.user_id = user_id
         self.channel_id = channel_id
+        self.user_id = user_id
         self.created_at = arrow.utcnow()
 
     def __repr__(self):
@@ -71,4 +72,27 @@ class Retrospective(Base):
 
     id = Column(Integer, primary_key=True)
     start_time = Column(ArrowType)
-    frequency = Column(ArrowType)
+    end_time = Column(ArrowType)
+    frequency = Column(Interval)
+    channel_id = Column(Integer, ForeignKey('channels.id'))
+
+    def __init__(self, start_time, end_time, frequency, channel_id):
+        self.start_time = start_time
+        self.end_time = end_time
+        self.frequency = frequency
+        self.channel_id = channel_id
+
+    def get_messages(self):
+        pass
+
+    def reset_time(self):
+        now = arrow.utcnow()
+        while self.end_time < now:
+            self.start_time += self.frequency
+            self.end_time += self.frequency
+
+    def __repr__(self):
+        return "<Retrospective for %r>" % self.channel
+
+    def __str__(self):
+        return "<Retrospective for %r>" % self.channel
